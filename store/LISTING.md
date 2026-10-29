@@ -1,4 +1,4 @@
-# Chrome Web Store listing draft — Ironheights 0.1.0 (NOT submitted)
+# Chrome Web Store listing draft — Ironheights 0.1.0 (final, ready to paste)
 
 **Title (≤75):** Ironheights – AI Skill Scanner
 
@@ -45,9 +45,14 @@ Shows a security grade for AI agent skills (SKILL.md folders) on skill pages and
 ## Privacy practices tab
 - Data collected: **none** (leave every category unchecked).
 - Certify: data is not sold, not used or transferred for purposes unrelated to the single purpose, and not used for creditworthiness or lending.
-- Privacy policy URL: https://ironheights.dev/privacy. **This page needs to exist before you submit** (add an "Extension" section saying no data is collected).
+- Privacy policy URL: https://www.ironheights.dev/privacy/#extension (live)
 
 ## Assets
 - Icon 128: static/icons/128.png
 - Screenshots 1280x800: store/screenshot-1-report.png, -2-badge.png, -3-clawhub.png, -4-popup.png
 - Small promo tile 440x280: store/promo-small-440x280.png
+
+## Other fields
+- Homepage URL: https://www.ironheights.dev
+- Support URL: https://github.com/Frank-Masciopinto/ironheights-extension/issues
+- Final package: ironheights-extension-0.1.0.zip
