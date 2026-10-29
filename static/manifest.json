@@ -1,0 +1,66 @@
+{
+  "manifest_version": 3,
+  "name": "Ironheights \u2013 AI Skill Scanner",
+  "short_name": "Ironheights",
+  "version": "0.1.0",
+  "description": "Grade AI agent skills (SKILL.md) before you install them. Works for any AI bot's skills. Local scan, no telemetry.",
+  "homepage_url": "https://ironheights.dev",
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Ironheights",
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "scripts": [
+      "background.js"
+    ],
+    "type": "module"
+  },
+  "permissions": [
+    "contextMenus",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://github.com/*",
+    "https://api.github.com/*",
+    "https://raw.githubusercontent.com/*",
+    "https://clawhub.ai/*",
+    "https://grokpot.io/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://github.com/*",
+        "https://clawhub.ai/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "extension@ironheights.dev",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  }
+}

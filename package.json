@@ -1,0 +1,21 @@
+{
+  "name": "ironheights-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Ironheights browser extension: grade AI agent skills (SKILL.md) before you install them. Local-first, no telemetry.",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "vitest run",
+    "zip": "node scripts/build.mjs && cd dist && python3 -m zipfile -c ../ironheights-extension-0.1.0.zip ."
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "path-browserify": "^1.0.1",
+    "playwright": "^1.64.1",
+    "vitest": "^5.0.5",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  }
+}

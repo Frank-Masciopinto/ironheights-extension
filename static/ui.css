@@ -1,0 +1,21 @@
+:root{--ink:#0b1220;--mut:#57606a;--line:#d0d7de;--brand:#e8590c}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 -apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:#fff}
+header{display:flex;gap:12px;align-items:center;padding:14px 16px;background:var(--ink);color:#fff}
+header h1{margin:0;font-size:17px}header p{margin:2px 0 0;font-size:12px;color:#9fb0c3;word-break:break-all}
+.popup{width:360px}.popup>*:not(header){margin:12px 16px}
+code{background:#f1f3f5;padding:1px 4px;border-radius:4px}
+form{display:flex;gap:6px}input[type=url]{flex:1;padding:7px 8px;border:1px solid var(--line);border-radius:6px}
+button{background:var(--brand);color:#fff;border:0;border-radius:6px;padding:7px 12px;font-weight:600;cursor:pointer}
+.toggle{display:flex;gap:8px;align-items:flex-start}.small{font-size:12px;color:var(--mut)}
+footer{font-size:12px;color:var(--mut);border-top:1px solid var(--line);padding:10px 16px}
+footer a{color:var(--brand)}
+.results main{max-width:880px;margin:20px auto;padding:0 16px}
+.summary{display:flex;gap:18px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:16px}
+.grade{font-size:44px;font-weight:800;color:#fff;width:84px;height:84px;border-radius:16px;display:flex;align-items:center;justify-content:center}
+.g-A{background:#1a7f37}.g-B{background:#4c8f2a}.g-C{background:#b08800}.g-D{background:#d1621f}.g-F{background:#cf222e}.g-x{background:#57606a;font-size:22px}
+.summary h2{margin:0 0 4px}.verdict{font-weight:700;text-transform:uppercase}
+.warn{background:#fff8c5;border:1px solid #d4a72c;border-radius:8px;padding:10px 12px;margin:14px 0}
+.finding{border:1px solid var(--line);border-left:5px solid #57606a;border-radius:8px;padding:10px 12px;margin:10px 0}
+.sev-critical{border-left-color:#82071e}.sev-high{border-left-color:#cf222e}.sev-medium{border-left-color:#d1621f}.sev-low{border-left-color:#b08800}
+.finding .meta{font-size:12px;color:var(--mut)}.finding pre{white-space:pre-wrap;word-break:break-word;background:#f6f8fa;padding:8px;border-radius:6px;margin:6px 0 0;font-size:12px}
+.disclaimer{font-weight:700;margin-top:18px}

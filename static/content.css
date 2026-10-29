@@ -1,0 +1,4 @@
+.ih-badge{position:relative;display:inline-flex;margin-left:10px;vertical-align:middle;text-decoration:none!important;font:600 12px/1 -apple-system,Segoe UI,sans-serif;cursor:pointer}
+.ih-badge .ih-pill{color:#fff;background:#0b1220;border-radius:999px;padding:5px 10px;white-space:nowrap}
+.ih-badge .ih-tip{display:none;position:absolute;top:130%;left:0;z-index:9999;width:360px;white-space:pre-wrap;background:#0b1220;color:#e6edf3;border-radius:8px;padding:10px 12px;font-weight:400;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.ih-badge:hover .ih-tip{display:block}
