@@ -56,3 +56,13 @@ describe('sources', () => {
     expect(scanFiles(got.files).grade).toBe('F');
   });
 });
+
+describe('OWASP / OpenCRE tags (0.2.0)', () => {
+  it('tags an instruction override with LLM01 and CRE 012-625, links are static', async () => {
+    const { tagFinding } = await import('../src/engine.ts');
+    const t = tagFinding({ ruleId: 'IH-INJ-001', severity: 'high', confidence: 'high', file: 'SKILL.md', evidence: 'x', message: 'm', remediation: 'r' } as any);
+    expect(t.standards).toBe('OWASP LLM01:2025 · CRE 012-625');
+    expect(t.links.map((l) => l.url)).toContain('https://www.opencre.org/cre/012-625');
+    expect(t.rulePage).toBe('https://www.ironheights.dev/rules/ih-inj-001');
+  });
+});

@@ -8,6 +8,7 @@ import { gradeFor } from '../vendor/ironheights/core/grade.ts';
 import { parseSkillMarkdown } from '../vendor/ironheights/openclaw/skill.ts';
 import { skillHoldsAmbientSecret } from '../vendor/ironheights/rules/ambient-env.ts';
 import { SAFETY_REMINDER, TOOL_VERSION } from '../vendor/ironheights/version.ts';
+import { referenceLinks, rulePageUrl, standardsLine } from '../vendor/ironheights/rules/references.ts';
 import type { Finding, ScanContext, ScannedFile } from '../vendor/ironheights/core/types.ts';
 
 export { SAFETY_REMINDER };
@@ -18,12 +19,29 @@ export interface InputFile {
   text: string;
 }
 
+/** A finding plus its OWASP LLM 2025 / OpenCRE tags. Links are static strings; nothing is fetched. */
+export type TaggedFinding = Finding & {
+  standards?: string;
+  links: { label: string; url: string }[];
+  rulePage: string;
+};
+
+export function tagFinding(finding: Finding): TaggedFinding {
+  const standards = standardsLine(finding.ruleId);
+  return {
+    ...finding,
+    ...(standards ? { standards } : {}),
+    links: referenceLinks(finding.ruleId),
+    rulePage: rulePageUrl(finding.ruleId),
+  };
+}
+
 export interface ScanResult {
   skillName: string;
   grade: string; // A-F, or 'incomplete' / 'nothing-scanned'
   score?: number;
   verdict: string;
-  findings: Finding[];
+  findings: TaggedFinding[];
   filesScanned: number;
   skipped: { file: string; reason: string }[];
   engineVersion: string;
@@ -88,7 +106,7 @@ export function scanFiles(
     grade: grade.letter,
     ...(grade.score !== undefined ? { score: grade.score } : {}),
     verdict,
-    findings,
+    findings: findings.map(tagFinding),
     filesScanned: files.length,
     skipped,
     engineVersion: TOOL_VERSION,

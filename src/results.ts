@@ -39,6 +39,20 @@ scanUrl(url).then((r) => {
     d.append(el('div', 'meta', `${f.file}${f.line ? ':' + f.line : ''}${f.note ? ' — ' + f.note : ''}`));
     if (f.evidence) d.append(el('pre', '', f.evidence));
     if (f.remediation) d.append(el('div', 'meta', 'Fix: ' + f.remediation));
+    if (f.standards) {
+      const std = el('div', 'meta standards', f.standards + ' · ');
+      const links = [...f.links, { label: `${f.ruleId} rule page`, url: f.rulePage }];
+      links.forEach((link, i) => {
+        if (!/^https:\/\/(www\.opencre\.org|genai\.owasp\.org|www\.ironheights\.dev)\//.test(link.url)) return;
+        const a = el('a', '', link.label);
+        a.href = link.url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        if (i > 0) std.append(' · ');
+        std.append(a);
+      });
+      d.append(std);
+    }
     out.append(d);
   }
   out.append(el('p', 'disclaimer', SAFETY_REMINDER + ' Review the skill yourself, and use the Ironheights CLI for baselines and runtime checks.'));

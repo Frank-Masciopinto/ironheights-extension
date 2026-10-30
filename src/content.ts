@@ -50,7 +50,7 @@ function render(el: HTMLElement, url: string, res: any) {
     const g = /^[A-F]$/.test(r.grade) ? r.grade : r.grade === 'incomplete' ? '?' : '–';
     pill.textContent = `Ironheights ${g}${r.score !== undefined ? ` ${r.score}/100` : ''} · ${r.findings.length} finding${r.findings.length === 1 ? '' : 's'}`;
     pill.style.background = COLORS[r.grade] ?? '#57606a';
-    const top = r.findings.slice(0, 3).map((f: any) => `${f.severity.toUpperCase()} ${f.ruleId}: ${f.message}`);
+    const top = r.findings.slice(0, 3).map((f: any) => `${f.severity.toUpperCase()} ${f.ruleId}${f.standards ? ` [${f.standards}]` : ''}: ${f.message}`);
     tip.textContent = [...(top.length ? top : ['No findings.']), r.grade === 'incomplete' ? 'Some files were not scanned, so no grade.' : '', r.disclaimer, 'Click for the full report.'].filter(Boolean).join('\n');
   }
   el.append(pill, tip);

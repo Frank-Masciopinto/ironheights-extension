@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Ironheights \u2013 AI Skill Scanner",
   "short_name": "Ironheights",
-  "version": "0.1.0",
-  "description": "Grade AI agent skills (SKILL.md) before you install them. Works for any AI bot's skills. Local scan, no telemetry.",
+  "version": "0.2.0",
+  "description": "Protects any AI bot's skills: grades SKILL.md before you install, with OWASP LLM and OpenCRE tags. Local scan, no telemetry.",
   "homepage_url": "https://ironheights.dev",
   "icons": {
     "16": "icons/16.png",
