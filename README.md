@@ -1,5 +1,7 @@
 # Ironheights browser extension (v0.3.0)
 
+**Ironheights: The Immune System for AI Agents.** Catch bad skills before they spread.
+
 Grade AI agent skills (any folder with a `SKILL.md`: OpenClaw, Claude, Grok Bot, Codex, Cursor, and other AI bots) before you install them. It's the skill-focused counterpart to VirusTotal's VT4Browsers.
 
 Ironheights protects any AI bot that installs it, and this extension checks skills before they reach your bot.
