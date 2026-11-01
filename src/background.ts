@@ -9,7 +9,7 @@ api.runtime.onInstalled.addListener(() => {
   api.contextMenus.removeAll(() => {
     api.contextMenus.create({ id: 'ih-scan-link', title: 'Scan with Ironheights', contexts: ['link'] });
     api.contextMenus.create({ id: 'ih-scan-page', title: 'Scan this skill with Ironheights', contexts: ['page'],
-      documentUrlPatterns: ['https://github.com/*', 'https://clawhub.ai/*', 'https://grokpot.io/*'] });
+      documentUrlPatterns: ['https://github.com/*', 'https://clawhub.ai/*', 'https://grokpot.io/*', 'https://www.npmjs.com/package/*', 'https://skills.sh/*', 'https://www.skills.sh/*', 'https://claude-plugins.dev/skills/*'] });
   });
   api.storage.sync.get({ autoBadge: true }).then?.((v: any) => api.storage.sync.set(v));
 });

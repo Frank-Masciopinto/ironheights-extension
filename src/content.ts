@@ -1,5 +1,8 @@
-// Adds a small grade badge on ClawHub skill pages and GitHub folders that contain a SKILL.md.
-// It only reads the URL and file list; scans run in the extension's background worker.
+// Adds a small grade badge on ClawHub, GitHub, npm, Smithery, skills.sh and claude-plugins.dev skill pages,
+// and a warning toast when you copy an install snippet on those sites.
+// It only reads the URL, links and copied text; scans run in the extension's background worker.
+import { targetForNewSite, isNotASkill } from './pages.ts';
+import { parseInstallSnippet } from './snippets.ts';
 const api = (globalThis as any).browser ?? chrome;
 const BADGE_ID = 'ironheights-badge';
 
@@ -22,7 +25,14 @@ function skillUrlForPage(): string | undefined {
     });
     return hasSkill ? location.origin + pathname : undefined;
   }
-  return undefined;
+  const t = targetForNewSite(location.href, pageLinks());
+  return t === 'none' ? undefined : t;
+}
+
+function pageLinks(): string[] {
+  const root = document.querySelector('main') ?? document.body;
+  if (!root) return [];
+  return [...root.querySelectorAll('a[href]')].map((a) => (a as HTMLAnchorElement).href);
 }
 
 function anchor(): Element | null {
@@ -53,6 +63,7 @@ function render(el: HTMLElement, url: string, res: any) {
     const top = r.findings.slice(0, 3).map((f: any) => `${f.severity.toUpperCase()} ${f.ruleId}${f.standards ? ` [${f.standards}]` : ''}: ${f.message}`);
     tip.textContent = [...(top.length ? top : ['No findings.']), r.grade === 'incomplete' ? 'Some files were not scanned, so no grade.' : '', r.disclaimer, 'Click for the full report.'].filter(Boolean).join('\n');
   }
+  if (!res.ok && location.hostname === 'www.npmjs.com' && isNotASkill(res.error)) { el.style.display = 'none'; return; }
   el.append(pill, tip);
   el.onclick = (e) => { e.preventDefault(); api.runtime.sendMessage({ type: 'ih-open', url }); };
 }
@@ -102,3 +113,61 @@ api.storage.sync.get({ autoBadge: true }).then((v: any) => { enabled = v.autoBad
 api.storage.onChanged.addListener((c: any) => { if (c.autoBadge) { enabled = c.autoBadge.newValue; if (!enabled) document.getElementById(BADGE_ID)?.remove(); else ensure(); } });
 document.addEventListener('turbo:load', schedule);
 new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
+
+// ---- Copy warning: scan what an install snippet would install, before it is pasted. ----
+let copyWarn = true;
+api.storage.sync.get({ copyWarn: true }).then((v: any) => { copyWarn = v.copyWarn; });
+api.storage.onChanged.addListener((c: any) => { if (c.copyWarn) copyWarn = c.copyWarn.newValue; });
+
+const VERDICT: Record<string, string> = { A: 'no findings', B: 'low risk', C: 'review before installing', D: 'risky', F: 'do not install' };
+
+function toast(): HTMLElement {
+  let box = document.getElementById('ironheights-toasts');
+  if (!box) { box = document.createElement('div'); box.id = 'ironheights-toasts'; box.setAttribute('role', 'status'); document.body.appendChild(box); }
+  const t = document.createElement('div');
+  t.className = 'ih-toast';
+  box.appendChild(t);
+  setTimeout(() => t.remove(), 60000); // safety net if a scan hangs
+  t.addEventListener('click', (e) => { if ((e.target as HTMLElement).tagName !== 'A') t.remove(); });
+  return t;
+}
+
+function setToast(t: HTMLElement, title: string, body: string, color: string, url?: string) {
+  t.textContent = '';
+  t.style.borderLeftColor = color;
+  if (!title.endsWith('…')) setTimeout(() => t.remove(), 15000);
+  const h = document.createElement('strong'); h.textContent = title;
+  const p = document.createElement('span'); p.textContent = body;
+  t.append(h, p);
+  if (url) {
+    const a = document.createElement('a'); a.href = '#'; a.textContent = 'Full report';
+    a.onclick = (e) => { e.preventDefault(); api.runtime.sendMessage({ type: 'ih-open', url }); };
+    t.append(a);
+  }
+}
+
+function onCopied(text: string) {
+  if (!copyWarn) return;
+  for (const target of parseInstallSnippet(text)) {
+    const t = toast();
+    setToast(t, 'Ironheights: checking before you paste…', target.label, '#57606a');
+    api.runtime.sendMessage({ type: 'ih-scan', url: target.url }).then((res: any) => {
+      if (!res?.ok) {
+        const msg = String(res?.error ?? 'no response');
+        setToast(t, `Ironheights: ${isNotASkill(msg) ? 'no skill files to grade' : 'could not scan'}`, `${target.label}: ${msg}`, '#57606a');
+        return;
+      }
+      const r = res.result;
+      const g = /^[A-F]$/.test(r.grade) ? r.grade : '?';
+      const n = r.findings.length;
+      setToast(t, `Ironheights ${g}${r.score !== undefined ? ` ${r.score}/100` : ''}: ${VERDICT[g] ?? 'incomplete scan'}`,
+        `${target.label} · ${n} finding${n === 1 ? '' : 's'}. No findings is not proof of safety.`, COLORS[r.grade] ?? '#57606a', target.url);
+    }, (e: any) => setToast(t, 'Ironheights: could not scan', String(e?.message ?? e), '#57606a'));
+  }
+}
+
+document.addEventListener('copy', () => { const s = String(document.getSelection() ?? ''); if (s) onCopied(s); }, true);
+window.addEventListener('message', (e) => {
+  if (e.source !== window || typeof e.data?.__ironheightsCopy !== 'string') return;
+  onCopied(e.data.__ironheightsCopy);
+});

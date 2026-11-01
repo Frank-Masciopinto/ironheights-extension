@@ -16,7 +16,8 @@ const MAX_BYTES = 1024 * 1024;
 const TEXTY = /\.(md|markdown|txt|sh|bash|zsh|ps1|py|js|mjs|cjs|ts|tsx|jsx|json|ya?ml|toml|ini|env|conf|rb|go|rs|php|pl|lua|bat|cmd|html?|xml|cfg)$|(^|\/)[^./]+$/i;
 
 export function classifyUrl(raw: string):
-  | { kind: 'github'; owner: string; repo: string; ref?: string; path: string }
+  | { kind: 'github'; owner: string; repo: string; ref?: string; path: string; skill?: string }
+  | { kind: 'npm'; name: string }
   | { kind: 'raw'; url: string }
   | { kind: 'clawhub'; owner?: string; slug: string }
   | { kind: 'page'; url: string }
@@ -38,6 +39,17 @@ export function classifyUrl(raw: string):
       return { kind: 'github', owner: owner!, repo: repo!, ref, path };
     }
     return undefined;
+  }
+  if ((u.hostname === 'www.npmjs.com' || u.hostname === 'npmjs.com') && parts[0] === 'package' && parts[1]) {
+    const name = parts[1].startsWith('@') && parts[2] ? `${parts[1]}/${parts[2]}` : parts[1];
+    return { kind: 'npm', name };
+  }
+  // skills.sh/<owner>/<repo>/<skill> lists a skill that lives in a GitHub repo.
+  if ((u.hostname === 'skills.sh' || u.hostname === 'www.skills.sh') && parts.length >= 2 && /^[\w.-]+$/.test(parts[0]!) && /^[\w.-]+$/.test(parts[1]!)) {
+    return { kind: 'github', owner: parts[0]!, repo: parts[1]!, path: '', ...(parts[2] ? { skill: parts[2] } : {}) };
+  }
+  if (u.hostname === 'claude-plugins.dev' && parts[0] === 'skills' && parts.length === 4 && parts[1]!.startsWith('@')) {
+    return { kind: 'github', owner: parts[1]!.slice(1), repo: parts[2]!, path: '', skill: parts[3]! };
   }
   if (u.hostname === 'raw.githubusercontent.com') return { kind: 'raw', url: u.toString() };
   if (u.hostname === 'clawhub.ai' || u.hostname === 'www.clawhub.ai') {
@@ -64,18 +76,38 @@ async function getJson<T>(f: F, url: string): Promise<T> {
 
 export async function fetchSkill(url: string, f: F = fetch): Promise<Fetched> {
   const c = classifyUrl(url);
-  if (!c) throw new Error('Not a link Ironheights can read (GitHub, ClawHub, grokpot or a SKILL.md link).');
+  if (!c) throw new Error('Not a link Ironheights can read (GitHub, ClawHub, npm, skills.sh, grokpot or a SKILL.md link).');
   if (c.kind === 'raw') {
     const text = await getText(f, c.url);
     const name = c.url.split('/').slice(-2, -1)[0] ?? 'skill';
     return { name, source: c.url, files: [{ path: 'SKILL.md', text }], skipped: [], coverage: 'single-file' };
   }
-  if (c.kind === 'github') return fetchGithub(f, c.owner, c.repo, c.ref, c.path);
+  if (c.kind === 'github') return fetchGithub(f, c.owner, c.repo, c.ref, c.path, c.skill);
+  if (c.kind === 'npm') return fetchNpm(f, c.name);
   if (c.kind === 'clawhub') return fetchClawhub(f, c.slug, c.owner);
   return fetchFromPage(f, c.url);
 }
 
-async function fetchGithub(f: F, owner: string, repo: string, ref: string | undefined, path: string): Promise<Fetched> {
+// npm: read the package's repository field from the public registry and scan that GitHub folder.
+// Only the package name is sent, to registry.npmjs.org.
+export function githubFromRepository(repo: unknown): { owner: string; repo: string; path: string } | undefined {
+  const r = typeof repo === 'string' ? { url: repo } : (repo as { url?: string; directory?: string } | undefined);
+  const url = r?.url;
+  if (typeof url !== 'string') return undefined;
+  const m = /^(?:github:)?([\w.-]+)\/([\w.-]+)$/.exec(url) ?? /github\.com[/:]([\w.-]+)\/([\w.-]+?)(?:\.git)?(?:[#/].*)?$/.exec(url);
+  if (!m) return undefined;
+  return { owner: m[1]!, repo: m[2]!, path: (r?.directory ?? '').replace(/^\.?\/|\/$/g, '') };
+}
+
+async function fetchNpm(f: F, name: string): Promise<Fetched> {
+  const meta = await getJson<{ version?: string; repository?: unknown }>(f, `https://registry.npmjs.org/${name.replace('/', '%2F')}/latest`);
+  const gh = githubFromRepository(meta.repository);
+  if (!gh) throw new Error(`npm package ${name} does not link a GitHub repository, so there are no skill files to read.`);
+  const got = await fetchGithub(f, gh.owner, gh.repo, undefined, gh.path);
+  return { ...got, name: `${name}@${meta.version ?? 'latest'}` };
+}
+
+async function fetchGithub(f: F, owner: string, repo: string, ref: string | undefined, path: string, skill?: string): Promise<Fetched> {
   const api = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
   if (!ref) ref = (await getJson<{ default_branch: string }>(f, api)).default_branch;
   const tree = await getJson<{ tree: { path: string; type: string; size?: number }[]; truncated: boolean }>(
@@ -89,6 +121,7 @@ async function fetchGithub(f: F, owner: string, repo: string, ref: string | unde
   // Use the folder in the URL when it has a SKILL.md; else the SKILL.md folder under it closest to the top.
   const prefix = path.replace(/\/$/, '');
   let dir = skillDirs.find((d) => d === prefix);
+  if (dir === undefined && skill) dir = skillDirs.find((d) => d.split('/').pop()?.toLowerCase() === skill.toLowerCase());
   if (dir === undefined) {
     const under = skillDirs.filter((d) => prefix === '' || d.startsWith(prefix + '/')).sort((a, b) => a.length - b.length);
     dir = under[0];

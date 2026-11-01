@@ -1,0 +1,21 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [master]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Manifest sanity
+        run: node -e "const m=require('./dist/manifest.json');if(m.version!==require('./package.json').version)throw new Error('version mismatch');if(JSON.stringify(m).includes('<all_urls>'))throw new Error('broad host permission')"
