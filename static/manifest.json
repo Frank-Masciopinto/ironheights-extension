@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Ironheights \u2013 AI Skill Scanner",
   "short_name": "Ironheights",
-  "version": "0.2.0",
-  "description": "Protects any AI bot's skills: grades SKILL.md before you install, with OWASP LLM and OpenCRE tags. Local scan, no telemetry.",
+  "version": "0.3.0",
+  "description": "Protects any AI bot that installs skills: grades SKILL.md on ClawHub, GitHub, npm and more; warns on copied installs.",
   "homepage_url": "https://ironheights.dev",
   "icons": {
     "16": "icons/16.png",
@@ -35,13 +35,19 @@
     "https://api.github.com/*",
     "https://raw.githubusercontent.com/*",
     "https://clawhub.ai/*",
-    "https://grokpot.io/*"
+    "https://grokpot.io/*",
+    "https://registry.npmjs.org/*"
   ],
   "content_scripts": [
     {
       "matches": [
         "https://github.com/*",
-        "https://clawhub.ai/*"
+        "https://clawhub.ai/*",
+        "https://www.npmjs.com/*",
+        "https://smithery.ai/*",
+        "https://skills.sh/*",
+        "https://www.skills.sh/*",
+        "https://claude-plugins.dev/*"
       ],
       "js": [
         "content.js"
@@ -50,6 +56,22 @@
         "content.css"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://github.com/*",
+        "https://clawhub.ai/*",
+        "https://www.npmjs.com/*",
+        "https://smithery.ai/*",
+        "https://skills.sh/*",
+        "https://www.skills.sh/*",
+        "https://claude-plugins.dev/*"
+      ],
+      "js": [
+        "copyhook.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
     }
   ],
   "browser_specific_settings": {
